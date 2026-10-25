@@ -1,0 +1,14 @@
+node_modules/
+# Only the bundled server is committed, so it can run straight from GitHub.
+dist/*
+!dist/tubesight.mjs
+coverage/
+*.tsbuildinfo
+*.log
+*.tgz
+.env
+.env.*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

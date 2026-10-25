@@ -1,0 +1,15 @@
+{
+  "name": "tubesight",
+  "description": "tubesight: let Claude watch YouTube videos through Google Gemini.",
+  "owner": {
+    "name": "Makkov",
+    "url": "https://github.com/Makkov-design"
+  },
+  "plugins": [
+    {
+      "name": "tubesight",
+      "source": "./",
+      "description": "Let Claude watch YouTube videos (frames + audio) through Google Gemini."
+    }
+  ]
+}

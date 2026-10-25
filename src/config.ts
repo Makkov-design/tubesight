@@ -1,0 +1,66 @@
+import { ConfigError } from "./errors.js";
+
+export const DEFAULT_MODEL = "gemini-flash-latest";
+
+export const LOG_LEVELS = ["error", "warn", "info", "debug"] as const;
+export type LogLevel = (typeof LOG_LEVELS)[number];
+
+export interface Config {
+  apiKey: string;
+  model: string;
+  timeoutMs: number;
+  /** Retries after the first attempt on 408/429/5xx. */
+  maxRetries: number;
+  /** 0 disables the result cache. */
+  cacheTtlMs: number;
+  logLevel: LogLevel;
+}
+
+type Env = Record<string, string | undefined>;
+
+function read(env: Env, name: string): string | undefined {
+  const value = env[name]?.trim();
+  return value ? value : undefined;
+}
+
+function readInt(env: Env, name: string, fallback: number, min: number, max: number): number {
+  const raw = read(env, name);
+  if (raw === undefined) return fallback;
+  const value = Number(raw);
+  if (!/^\d+$/.test(raw) || value < min || value > max) {
+    throw new ConfigError(`${name} must be a whole number from ${min} to ${max}, got "${raw}".`);
+  }
+  return value;
+}
+
+export function loadConfig(env: Env): Config {
+  const apiKey = read(env, "GEMINI_API_KEY") ?? read(env, "GOOGLE_API_KEY");
+  if (!apiKey) {
+    throw new ConfigError(
+      "GEMINI_API_KEY is not set. Create a key at https://aistudio.google.com/apikey and pass it " +
+        'in the "env" section of your MCP client config.',
+    );
+  }
+
+  if (apiKey.startsWith("${")) {
+    // Claude Code passes `${VAR}` through literally when VAR is not set.
+    throw new ConfigError(
+      `GEMINI_API_KEY is not set in this environment (the MCP config passed the placeholder ${apiKey} through). ` +
+        "Add GEMINI_API_KEY to the environment variables, e.g. in your cloud environment settings.",
+    );
+  }
+
+  const logLevel = (read(env, "TUBESIGHT_LOG_LEVEL") ?? "info").toLowerCase();
+  if (!(LOG_LEVELS as readonly string[]).includes(logLevel)) {
+    throw new ConfigError(`TUBESIGHT_LOG_LEVEL must be one of ${LOG_LEVELS.join(", ")}.`);
+  }
+
+  return {
+    apiKey,
+    model: read(env, "GEMINI_MODEL_NAME") ?? DEFAULT_MODEL,
+    timeoutMs: readInt(env, "TUBESIGHT_TIMEOUT_MS", 300_000, 1_000, 3_600_000),
+    maxRetries: readInt(env, "TUBESIGHT_MAX_RETRIES", 3, 0, 10),
+    cacheTtlMs: readInt(env, "TUBESIGHT_CACHE_TTL_MINUTES", 60, 0, 7 * 24 * 60) * 60_000,
+    logLevel: logLevel as LogLevel,
+  };
+}

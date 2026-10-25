@@ -1,0 +1,55 @@
+{
+  "name": "tubesight",
+  "version": "1.0.0",
+  "description": "MCP server that lets AI assistants watch YouTube videos (frames + audio) through Google Gemini.",
+  "type": "module",
+  "bin": {
+    "tubesight": "dist/tubesight.mjs"
+  },
+  "files": [
+    "dist/tubesight.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "node scripts/smoke.mjs",
+    "check": "npm run typecheck && npm test && npm run build",
+    "prepublishOnly": "npm run check"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude-code",
+    "gemini",
+    "youtube",
+    "video",
+    "vision",
+    "transcript"
+  ],
+  "author": "Makkov",
+  "license": "MIT",
+  "homepage": "https://github.com/Makkov-design/tubesight#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Makkov-design/tubesight.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Makkov-design/tubesight/issues"
+  },
+  "devDependencies": {
+    "@google/genai": "^2.30.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5",
+    "zod": "^4.6.7"
+  }
+}

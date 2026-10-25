@@ -1,0 +1,23 @@
+{
+  "name": "tubesight",
+  "version": "1.0.0",
+  "description": "Let Claude watch YouTube videos (frames + audio) through Google Gemini: summaries, Q&A, key moments, transcripts.",
+  "author": {
+    "name": "Makkov",
+    "url": "https://github.com/Makkov-design"
+  },
+  "homepage": "https://github.com/Makkov-design/tubesight",
+  "repository": "https://github.com/Makkov-design/tubesight",
+  "license": "MIT",
+  "keywords": ["youtube", "video", "gemini", "mcp", "transcript"],
+  "mcpServers": {
+    "tubesight": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/tubesight.mjs"],
+      "env": {
+        "GEMINI_API_KEY": "${GEMINI_API_KEY}",
+        "GEMINI_MODEL_NAME": "${GEMINI_MODEL_NAME:-gemini-flash-latest}"
+      }
+    }
+  }
+}
