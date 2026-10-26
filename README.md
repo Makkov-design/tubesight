@@ -146,6 +146,9 @@ GEMINI_API_KEY=... npm run smoke                                  # live check o
 GEMINI_API_KEY=... npm run smoke -- <url> --long <url-over-1h>    # also checks clip timestamps past one hour
 ```
 
+Inside this repository, `npx ytlens` resolves to the checkout itself rather than the published package, so an
+MCP client configured with `npx ytlens` cannot start it here; point it at `dist/ytlens.mjs` while developing.
+
 Code layout: `src/youtube.ts` (URLs and timestamps), `src/prompts.ts` (prompts and response schemas),
 `src/analyzer.ts` (Gemini client and error mapping), `src/cache.ts`, `src/server.ts` (MCP tools), `src/index.ts`
 (entry). The Claude Code plugin lives in `.claude-plugin/` and `skills/`.
