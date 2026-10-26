@@ -41,35 +41,30 @@ second straight from GitHub.
 
 ## Setup
 
-### Claude Code cloud sessions (claude.ai/code)
+### Add ytlens to any project (works in Claude Code cloud sessions too)
 
-Cloud sessions only see what is in the repository they run on. Add two files to **that project's** repository:
+Run this in the project's root folder, or just ask Claude Code to run it and commit the result:
 
-1. `.mcp.json` in the repository root:
+```bash
+npx -y github:Makkov-design/ytlens#v1.1.0 init
+```
 
-   ```json
-   {
-     "mcpServers": {
-       "ytlens": {
-         "command": "npx",
-         "args": ["-y", "github:Makkov-design/ytlens#v1.0.0"],
-         "env": { "GEMINI_API_KEY": "${GEMINI_API_KEY}" }
-       }
-     }
-   }
-   ```
+It adds two files to the project:
 
-2. The skill that teaches Claude how to use the tools, at `.claude/skills/ytlens/SKILL.md`:
+- `.mcp.json` with the ytlens server (other servers already in the file are kept);
+- `.claude/skills/ytlens/SKILL.md`, the skill that teaches Claude how to use the tools.
 
-   ```bash
-   curl -fsSL https://raw.githubusercontent.com/Makkov-design/ytlens/v1.0.0/skills/ytlens/SKILL.md \
-     --create-dirs -o .claude/skills/ytlens/SKILL.md
-   ```
+Commit both. Then make your Gemini key available:
 
-Then, at claude.ai/code, open the environment settings, add `GEMINI_API_KEY=<your key>` to the environment variables,
-and keep network access on **Trusted** (it already allows GitHub and `*.googleapis.com`).
+- **Cloud sessions (claude.ai/code):** open the environment settings, add `GEMINI_API_KEY=<your key>` to the
+  environment variables, and keep network access on **Trusted** (it already allows GitHub and `*.googleapis.com`).
+  Cloud sessions only load what is in the repository, which is why the files go into the project.
+- **On your computer:** set `GEMINI_API_KEY` as an environment variable for your user (on Windows:
+  `setx GEMINI_API_KEY "<your key>"`, then restart Claude Code).
 
-### Claude Code on your computer (plugin)
+Everyone who works in the repository gets ytlens; each person needs their own key.
+
+### Claude Code on your computer, in every project (plugin)
 
 The plugin bundles the server and the skill:
 
@@ -83,7 +78,7 @@ restart Claude Code). Optionally set `GEMINI_MODEL_NAME`.
 Or add only the server, without the plugin:
 
 ```bash
-claude mcp add ytlens --scope user --env GEMINI_API_KEY=<your key> -- npx -y github:Makkov-design/ytlens#v1.0.0
+claude mcp add ytlens --scope user --env GEMINI_API_KEY=<your key> -- npx -y github:Makkov-design/ytlens#v1.1.0
 ```
 
 On Windows, put `cmd /c` before `npx` in the command.
@@ -95,19 +90,19 @@ On Windows, put `cmd /c` before `npx` in the command.
   "mcpServers": {
     "ytlens": {
       "command": "npx",
-      "args": ["-y", "github:Makkov-design/ytlens#v1.0.0"],
+      "args": ["-y", "github:Makkov-design/ytlens#v1.1.0"],
       "env": { "GEMINI_API_KEY": "<your key>" }
     }
   }
 }
 ```
 
-Always pin a version tag (`#v1.0.0`), so a new release never runs on your machine without you choosing it.
+Always pin a version tag (`#v1.1.0`), so a new release never runs on your machine without you choosing it.
 
 ### Docker
 
 ```bash
-docker build -t ytlens https://github.com/Makkov-design/ytlens.git#v1.0.0
+docker build -t ytlens https://github.com/Makkov-design/ytlens.git#v1.1.0
 docker run -i --rm -e GEMINI_API_KEY=<your key> ytlens
 ```
 

@@ -14,9 +14,11 @@ describe("regressions", () => {
     }
   });
 
-  it("reports the package version", () => {
+  it("reports the package version everywhere", () => {
     const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as { version: string };
+    const plugin = JSON.parse(readFileSync(join(root, ".claude-plugin", "plugin.json"), "utf8")) as { version: string };
     expect(VERSION).toBe(pkg.version);
+    expect(plugin.version).toBe(pkg.version);
   });
 
   it("only ever talks to Google through the SDK (no hand-built URLs with the key)", () => {

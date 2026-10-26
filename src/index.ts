@@ -3,12 +3,27 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { createGeminiAnalyzer } from "./analyzer.js";
 import { CachedAnalyzer } from "./cache.js";
 import { loadConfig } from "./config.js";
-import { ConfigError } from "./errors.js";
+import { ConfigError, InvalidInputError } from "./errors.js";
+import { INIT_NEXT_STEPS, initProject } from "./init.js";
 import { createLogger } from "./logger.js";
 import { createServer } from "./server.js";
 import { VERSION } from "./version.js";
 
 async function main(): Promise<void> {
+  const command = process.argv[2];
+  if (command === "init") {
+    const { files } = initProject(process.cwd());
+    process.stderr.write(`ytlens ${VERSION}: added ${files.join(" and ")} to ${process.cwd()}\n${INIT_NEXT_STEPS}`);
+    return;
+  }
+  if (command === "--version" || command === "-v") {
+    process.stderr.write(`${VERSION}\n`);
+    return;
+  }
+  if (command !== undefined) {
+    throw new ConfigError(`Unknown command "${command}". Run without arguments to start the MCP server, or "init" to add ytlens to the current project.`);
+  }
+
   const config = loadConfig(process.env);
   const logger = createLogger(config.logLevel, undefined, [config.apiKey]);
   const analyzer = new CachedAnalyzer(createGeminiAnalyzer(config, logger), { ttlMs: config.cacheTtlMs });
@@ -19,7 +34,10 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  const message = error instanceof ConfigError ? error.message : `Failed to start: ${error instanceof Error ? error.message : String(error)}`;
+  const message =
+    error instanceof ConfigError || error instanceof InvalidInputError
+      ? error.message
+      : `Failed to start: ${error instanceof Error ? error.message : String(error)}`;
   process.stderr.write(`[ytlens] ERROR ${message}\n`);
   process.exit(1);
 });

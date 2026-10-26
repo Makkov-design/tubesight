@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0 — 2026-10-26
+
+- `ytlens init`: adds ytlens to any project in one command (`.mcp.json` entry plus the skill), so Claude Code cloud
+  sessions pick it up from the repository. Existing servers in `.mcp.json` are kept.
+- `ytlens --version`.
+
 ## 1.0.0 — 2026-10-26
 
 First release.
@@ -9,4 +15,5 @@ First release.
 - Analyze part of a video with `start` / `end`; `detail: "low"` for long videos; `response_language`.
 - Strict YouTube URL validation, in-memory result cache, per-call deadline with retries on rate limits and server errors.
 - Prompt-injection hardening and API key redaction in every error and log line.
-- Claude Code plugin with a bundled skill, so the server works in cloud sessions too.
+- Claude Code plugin with a bundled skill.
+- Single self-contained bundle that runs straight from GitHub.
