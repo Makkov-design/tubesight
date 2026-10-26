@@ -1,0 +1,158 @@
+# ytlens
+
+**Let your AI assistant actually watch YouTube.** ytlens is an [MCP](https://modelcontextprotocol.io) server that
+sends a YouTube video to Google Gemini, which looks at the frames *and* listens to the audio. Answers cover slides,
+code on screen, UI walkthroughs, charts and demos, not just the captions.
+
+Works with Claude Code (local and cloud sessions), Claude Desktop, Cursor and any other MCP client.
+
+[![CI](https://github.com/Makkov-design/ytlens/actions/workflows/ci.yml/badge.svg)](https://github.com/Makkov-design/ytlens/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `summarize_youtube_video` | Short, medium or long summary with timestamps |
+| `ask_about_youtube_video` | Answers a question with timestamped evidence; without a question, a detailed description |
+| `extract_key_moments` | Key moments as structured data: seconds, `H:MM:SS` timestamp, title, description, deep link |
+| `get_video_transcript` | Timestamped transcript with speaker labels, plus on-screen text (slides, titles, code); works without captions |
+| `list_supported_models` | Gemini models your key can use; marks the one in use |
+
+Options shared by the video tools:
+
+| Option | Meaning |
+|---|---|
+| `youtube_url` | Any YouTube video link (`watch`, `youtu.be`, `shorts`, `live`, `embed`, mobile, music) or the 11-character video ID |
+| `start`, `end` | Analyze only part of the video: seconds (`90`), `MM:SS` or `H:MM:SS` |
+| `detail` | `low` sends frames at low resolution: about 4x fewer tokens, good for long videos |
+| `response_language` | Answer language, e.g. `Russian` (the transcript keeps the spoken language) |
+
+## You need
+
+- A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey) (the free tier works)
+- Node.js 20 or newer
+
+Only public and unlisted videos can be analyzed. The free tier allows about 8 hours of YouTube video per day, and
+free-tier data may be used by Google to improve its products.
+
+The server is a single self-contained file (`dist/ytlens.mjs`) with no dependencies, so it starts in about a
+second straight from GitHub.
+
+## Setup
+
+### Claude Code cloud sessions (claude.ai/code)
+
+Cloud sessions only see what is in the repository they run on. Add two files to **that project's** repository:
+
+1. `.mcp.json` in the repository root:
+
+   ```json
+   {
+     "mcpServers": {
+       "ytlens": {
+         "command": "npx",
+         "args": ["-y", "github:Makkov-design/ytlens#v1.0.0"],
+         "env": { "GEMINI_API_KEY": "${GEMINI_API_KEY}" }
+       }
+     }
+   }
+   ```
+
+2. The skill that teaches Claude how to use the tools, at `.claude/skills/ytlens/SKILL.md`:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/Makkov-design/ytlens/v1.0.0/skills/ytlens/SKILL.md \
+     --create-dirs -o .claude/skills/ytlens/SKILL.md
+   ```
+
+Then, at claude.ai/code, open the environment settings, add `GEMINI_API_KEY=<your key>` to the environment variables,
+and keep network access on **Trusted** (it already allows GitHub and `*.googleapis.com`).
+
+### Claude Code on your computer (plugin)
+
+The plugin bundles the server and the skill:
+
+```text
+/plugin install ytlens --marketplace Makkov-design/ytlens
+```
+
+Set `GEMINI_API_KEY` as an environment variable for your user (on Windows: `setx GEMINI_API_KEY "<your key>"`, then
+restart Claude Code). Optionally set `GEMINI_MODEL_NAME`.
+
+Or add only the server, without the plugin:
+
+```bash
+claude mcp add ytlens --scope user --env GEMINI_API_KEY=<your key> -- npx -y github:Makkov-design/ytlens#v1.0.0
+```
+
+On Windows, put `cmd /c` before `npx` in the command.
+
+### Claude Desktop, Cursor and other clients
+
+```json
+{
+  "mcpServers": {
+    "ytlens": {
+      "command": "npx",
+      "args": ["-y", "github:Makkov-design/ytlens#v1.0.0"],
+      "env": { "GEMINI_API_KEY": "<your key>" }
+    }
+  }
+}
+```
+
+Always pin a version tag (`#v1.0.0`), so a new release never runs on your machine without you choosing it.
+
+### Docker
+
+```bash
+docker build -t ytlens https://github.com/Makkov-design/ytlens.git#v1.0.0
+docker run -i --rm -e GEMINI_API_KEY=<your key> ytlens
+```
+
+## Configuration
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) | required | Gemini API key |
+| `GEMINI_MODEL_NAME` | `gemini-flash-latest` | Model used for analysis; `list_supported_models` shows the choices |
+| `YTLENS_TIMEOUT_MS` | `300000` | Time limit for one tool call, retries included |
+| `YTLENS_MAX_RETRIES` | `3` | Retries on rate limits (429), timeouts and server errors, with backoff |
+| `YTLENS_CACHE_TTL_MINUTES` | `60` | How long identical requests are answered from memory; `0` turns the cache off |
+| `YTLENS_LOG_LEVEL` | `info` | `error`, `warn`, `info` or `debug`. Logs go to stderr and never contain questions or answers |
+
+## Tips for long videos
+
+- Gemini samples about one frame per second. A one-hour video at default detail is roughly 1M tokens, the limit of
+  most models, so use `detail: "low"` or split it with `start` / `end`.
+- Transcripts are limited by the model's output size; request videos longer than about 30 minutes in parts.
+
+## Security
+
+- Only YouTube video URLs are accepted; anything else is rejected before a request is made.
+- The API key travels only in request headers to Google and is removed from every error message and log line.
+- Video content is untrusted. Gemini is told never to follow instructions found in a video, and every result is
+  labelled as third-party content so the calling assistant treats it as information, not commands.
+- Nothing is written to disk; the cache lives in memory only.
+
+See [SECURITY.md](SECURITY.md) to report a vulnerability.
+
+## Development
+
+```bash
+npm ci
+npm test            # unit and in-memory MCP integration tests
+npm run typecheck
+npm run bundle      # writes dist/ytlens.mjs; commit it together with the source change
+GEMINI_API_KEY=... npm run smoke                                  # live check of every tool on a short public video
+GEMINI_API_KEY=... npm run smoke -- <url> --long <url-over-1h>    # also checks clip timestamps past one hour
+```
+
+Code layout: `src/youtube.ts` (URLs and timestamps), `src/prompts.ts` (prompts and response schemas),
+`src/analyzer.ts` (Gemini client and error mapping), `src/cache.ts`, `src/server.ts` (MCP tools), `src/index.ts`
+(entry). The Claude Code plugin lives in `.claude-plugin/` and `skills/`.
+
+## License
+
+[MIT](LICENSE)

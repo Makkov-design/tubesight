@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+.git
+.github
+.claude
+.claude-plugin
+skills
+.env
+.env.*
+*.log
+*.tgz
+test

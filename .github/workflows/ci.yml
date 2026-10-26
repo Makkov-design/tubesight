@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run bundle
+      - name: Committed bundle is up to date
+        run: git diff --exit-code --stat -- dist/ytlens.mjs || (echo "Run npm run bundle and commit dist/ytlens.mjs" && exit 1)
+      - run: npm audit --audit-level=high
+
+  bundle-runs:
+    # The committed bundle has no dependencies; check it starts on every supported Node version.
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Server starts and lists its tools over stdio
+        run: |
+          cp dist/ytlens.mjs "$RUNNER_TEMP/"
+          cd "$RUNNER_TEMP"
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            | GEMINI_API_KEY=ci-dummy timeout 15 node ytlens.mjs > out.jsonl
+          node -e 'const l=require("fs").readFileSync("out.jsonl","utf8").trim().split("\n").map(JSON.parse); const t=l.find(m=>m.id===2).result.tools; if(t.length!==5) throw new Error("expected 5 tools"); console.log(t.map(x=>x.name).join(", "))'
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: docker build -t ytlens .

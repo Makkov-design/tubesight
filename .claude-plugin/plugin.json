@@ -1,0 +1,23 @@
+{
+  "name": "ytlens",
+  "version": "1.0.0",
+  "description": "Let Claude watch YouTube videos (frames + audio) through Google Gemini: summaries, Q&A, key moments, transcripts.",
+  "author": {
+    "name": "Makkov",
+    "url": "https://github.com/Makkov-design"
+  },
+  "homepage": "https://github.com/Makkov-design/ytlens",
+  "repository": "https://github.com/Makkov-design/ytlens",
+  "license": "MIT",
+  "keywords": ["youtube", "video", "gemini", "mcp", "transcript"],
+  "mcpServers": {
+    "ytlens": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/ytlens.mjs"],
+      "env": {
+        "GEMINI_API_KEY": "${GEMINI_API_KEY}",
+        "GEMINI_MODEL_NAME": "${GEMINI_MODEL_NAME:-gemini-flash-latest}"
+      }
+    }
+  }
+}
