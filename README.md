@@ -6,6 +6,7 @@ code on screen, UI walkthroughs, charts and demos, not just the captions.
 
 Works with Claude Code (local and cloud sessions), Claude Desktop, Cursor and any other MCP client.
 
+[![npm](https://img.shields.io/npm/v/ytlens)](https://www.npmjs.com/package/ytlens)
 [![CI](https://github.com/Makkov-design/ytlens/actions/workflows/ci.yml/badge.svg)](https://github.com/Makkov-design/ytlens/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -36,8 +37,8 @@ Options shared by the video tools:
 Only public and unlisted videos can be analyzed. The free tier allows about 8 hours of YouTube video per day, and
 free-tier data may be used by Google to improve its products.
 
-The server is a single self-contained file (`dist/ytlens.mjs`) with no dependencies, so it starts in about a
-second straight from GitHub.
+The server is a single self-contained file with no dependencies, published on
+[npm](https://www.npmjs.com/package/ytlens), so `npx` starts it in seconds.
 
 ## Setup
 
@@ -46,7 +47,7 @@ second straight from GitHub.
 Run this in the project's root folder, or just ask Claude Code to run it and commit the result:
 
 ```bash
-npx -y github:Makkov-design/ytlens#v1.1.0 init
+npx -y ytlens@1.1.0 init
 ```
 
 It adds two files to the project:
@@ -78,7 +79,7 @@ restart Claude Code). Optionally set `GEMINI_MODEL_NAME`.
 Or add only the server, without the plugin:
 
 ```bash
-claude mcp add ytlens --scope user --env GEMINI_API_KEY=<your key> -- npx -y github:Makkov-design/ytlens#v1.1.0
+claude mcp add ytlens --scope user --env GEMINI_API_KEY=<your key> -- npx -y ytlens@1.1.0
 ```
 
 On Windows, put `cmd /c` before `npx` in the command.
@@ -90,14 +91,15 @@ On Windows, put `cmd /c` before `npx` in the command.
   "mcpServers": {
     "ytlens": {
       "command": "npx",
-      "args": ["-y", "github:Makkov-design/ytlens#v1.1.0"],
+      "args": ["-y", "ytlens@1.1.0"],
       "env": { "GEMINI_API_KEY": "<your key>" }
     }
   }
 }
 ```
 
-Always pin a version tag (`#v1.1.0`), so a new release never runs on your machine without you choosing it.
+Always pin the version (`ytlens@1.1.0`), so a new release never runs on your machine without you choosing it.
+Without npm, the same works straight from GitHub: `npx -y github:Makkov-design/ytlens#v1.1.0`.
 
 ### Docker
 
